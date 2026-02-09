@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Registro de Usuario</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    </head>
+    <body class="container my-5">
+        <h3 class="mb-4 text-center">Registro de Usuario</h3>
+        
+        <div class="row justify-content-end">
+            <a th:href="@{/usuario}" class="btn btn-outline-secondary mb-4 col-1">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+        </div>
+        
+        
+        <form id="formUsuario"  method="post" th:object="${Usuario}" th:action="@{add}" enctype="multipart/form-data">
+            
+            <input type="hidden" th:field="*{IdUsuario}">
+            <input type="hidden" th:field="*{Direcciones[0].IdDireccion}">
+            
+            <!-- ================ INFORMACION BASICA ====================== -->
+            <div class="mb-4" 
+                 th:if="${(Usuario.IdUsuario == 0 && Usuario.Direcciones[0].IdDireccion == 0) 
+                 || (Usuario.IdUsuario > 0 && Usuario.Direcciones[0].IdDireccion == -1)}">
+                
+                <div class="mb-4">
+                    <h4 class="border-bottom pb-2 mb-4">
+                        <i class="bi bi-person-fill text-primary"></i> Información Basica
+                    </h4>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <input type="file" class="form-control" name="imagenUsuario">
+                    </div>
+                </div>
+                
+                <div class="row"> <!-- Nombre Usuario-->
+                    <div class="col-md-4 mb-4">
+                        <div class="form-floating">
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="nombreInput"
+                                th:field="*{Nombre}"
+                                placeholder="Tu nombre"
+                                onkeypress="LetrasConAcentos(event, this)"
+                                oncopy="return false" onpaste="return false">
+                            <label for="nombreInput"><i class="bi bi-person-fill ms-1"></i>&nbsp;&nbsp;Nombre</label>   
+                        </div>
+                        <span class="text-danger" th:if="${#fields.hasErrors('Nombre')}" th:errors="${Usuario.Nombre}" ></span>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="col-md-4 mb-4">
+                        <div class="form-floating">
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="apellidoPaternoInput"
+                                th:field="*{ApellidoPaterno}"
+                                placeholder="Tu apellido paterno"
+                                onkeypress="LetrasConAcentos(event, this)"
+                                oncopy="return false" onpaste="return false">
+                            <label for="apellidoPaternoInput"><i class="bi bi-person ms-1"></i>&nbsp;&nbsp;Apellido Paterno</label>   
+                        </div>
+
+                        <span class="text-danger" th:if="${#fields.hasErrors('ApellidoPaterno')}" th:errors="${Usuario.ApellidoPaterno}" ></span>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="col-md-4 mb-4">
+                        <div class="form-floating">
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="apellidoMaternoInput"
+                                th:field="*{ApellidoMaterno}"
+                                placeholder="Tu apellido materno"
+                                onkeypress="LetrasConAcentos(event, this)"
+                                oncopy="return false" onpaste="return false">
+                            <label for="apellidoMaternoInput"><i class="bi bi-person ms-1"></i>&nbsp;&nbsp;Apellido Materno</label>   
+                        </div>
+
+                        <span class="text-danger" th:if="${#fields.hasErrors('ApellidoMaterno')}" th:errors="${Usuario.ApellidoMaterno}" ></span>
+                        <span class="error-message"></span>
+                    </div>
+                </div>
+
+                <div class="row"> <!--Fecha, Genero y CURP-->
+                    <div class="col-md-6 mb-4">
+                        <div class="form-floating">
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="curpInput"
+                                th:field="*{Curp}"
+                                placeholder="GOAR950815HDFRML09"
+                                maxlength="18"
+                                onblur="CurpValidate(event, this)">
+                            <label for="curpInput"><i class="bi bi-card-text"></i>&nbsp;&nbsp;CURP</label>   
+                        </div>
+                        <span class="text-danger" th:if="${#fields.hasErrors('Curp')}" th:errors="${Usuario.Curp}" ></span>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="col-md-3 mb-4">
+                        <div class="form-floating">
+                            <input
+                                type="date"
+                                class="form-control"
+                                id="fechaNacimientoInput"
+                                th:field="*{FechaNacimiento}"
+                                placeholder="Tu fecha de nacimiento"
+                                onchange="FechaValidate(event, this)">
+                            <label for="fechaNacimientoInput"><i class="bi bi-calendar-event ms-1"></i>&nbsp;&nbsp;Fecha de Nacimiento</label>   
+                        </div>
+
+                        <span class="text-danger" th:if="${#fields.hasErrors('FechaNacimiento')}" th:errors="${Usuario.FechaNacimiento}" ></span>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="col-md-3 mb-4">
+                        <div class="form-floating">
+                            <select
+                                class="form-select"
+                                id="sexoSelect"
+                                th:field="*{Sexo}">
+                                <option value="N">Selecciona una opcion</option>
+                                <option value="H">Hombre</option>
+                                <option value="M">Mujer</option>
+                                <option value="N">No definido</option>
+                            </select>
+                            <label for="sexoSelect"><i class="bi bi-gender-ambiguous ms-1"></i>&nbsp;&nbsp;Genero</label>   
+                        </div>
+
+                        <span class="text-danger" th:if="${#fields.hasErrors('Sexo')}" th:errors="${Usuario.Sexo}" ></span>
+                        <span class="error-message"></span>
+                    </div>
+                </div>
+
+                <div class="row"> <!--Usuario, Rol y Correo-->
+                    <div class="col-md-3 mb-4">
+                        <div class="form-floating">
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="usernameInput"
+                                th:field="*{Username}"
+                                placeholder="tunombre123"
+                                onblur="UsernameValidate(event, this)">
+                            <label for="usernameInput"><i class="bi bi-person-circle ms-1"></i>&nbsp;&nbsp;Username</label>   
+                        </div>
+                        <span class="text-danger" th:if="${#fields.hasErrors('Username')}" th:errors="${Usuario.Username}" ></span>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="col-md-3 mb-4">
+                        <div class="form-floating">
+                            <select
+                                class="form-select"
+                                id="rolSelect"
+                                th:field="*{rol.IdRol}"
+                                onblur="SelectValidate(event, this)">
+                                <option value=0 selected> Selecciona un puesto</option>
+                                <option th:each="rol : ${Roles}"
+                                        th:text="${rol.Nombre}"
+                                        th:value="${rol.IdRol}"></option>
+                            </select>
+                            <label for="rolSelect"><i class="bi bi-briefcase ms-1"></i>&nbsp;&nbsp;Puesto</label>   
+                        </div>
+
+                        <span class="text-danger" th:if="${#fields.hasErrors('rol.IdRol')}" th:errors="${Usuario.FechaNacimiento}" ></span>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        <div class="form-floating">
+                            <input
+                                type="email"
+                                class="form-control"
+                                id="emailInput"
+                                th:field="*{Email}"
+                                placeholder="ejemplo@gmail.com"
+                                onblur="EmailValidate(event, this)">
+                            <label for="emailInput"><i class="bi bi-envelope-fill ms-1"></i>&nbsp;&nbsp;Correo Electronico</label>   
+                        </div>
+
+                        <span class="text-danger" th:if="${#fields.hasErrors('Email')}" th:errors="${Usuario.Email}" ></span>
+                        <span class="error-message"></span>
+                    </div>
+                </div>
+
+                <div class="row"> <!--Telefono, Celular y Password-->
+                    <div class="col-md-3 mb-4">
+                        <div class="form-floating">
+                            <input
+                                type="tel"
+                                class="form-control"
+                                id="telefonoInput"
+                                th:field="*{Telefono}"
+                                placeholder="5512345678"
+                                maxlength="10"
+                                onblur="PhoneValidate(event, this)">
+                            <label for="telefonoInput"><i class="bi bi-telephone-fill ms-1"></i>&nbsp;&nbsp;Telefono</label>   
+                        </div>
+                        <span class="text-danger" th:if="${#fields.hasErrors('Telefono')}" th:errors="${Usuario.Telefono}" ></span>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="col-md-3 mb-4">
+                        <div class="form-floating">
+                            <input
+                                type="tel"
+                                class="form-control"
+                                id="celularInput"
+                                th:field="*{Celular}"
+                                placeholder="5587654321"
+                                maxlength="10"
+                                onblur="PhoneValidate(event, this)">
+                            <label for="celularInput"><i class="bi bi-phone-fill ms-1"></i>&nbsp;&nbsp;Celular</label>   
+                        </div>
+                        <span class="text-danger" th:if="${#fields.hasErrors('Celular')}" th:errors="${Usuario.Celular}" ></span>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        <div class="form-floating">
+                            <input
+                                type="text"
+                                class="form-control"
+                                id="passwordInput"
+                                th:field="*{Password}"
+                                placeholder="Contraseña$123"
+                                onblur="PasswordValidate(event, this)"
+                                oncopy="return false" onpaste="return false">
+                            <label for="passwordInput"><i class="bi bi-shield-lock-fill ms-1"></i>&nbsp;&nbsp;Contraseña</label>   
+                        </div>
+
+                        <span class="text-danger" th:if="${#fields.hasErrors('Password')}" th:errors="${Usuario.Password}" ></span>
+                        <span class="error-message"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ================== DIRECCION ================== -->
+            <div class="mb-4"
+                 th:if="${(Usuario.IdUsuario == 0 && Usuario.Direcciones[0].IdDireccion == 0) 
+                     || (Usuario.IdUsuario != 0 && Usuario.Direcciones[0].IdDireccion > 0) 
+                     || (Usuario.IdUsuario != 0 && Usuario.Direcciones[0].IdDireccion == 0)}">
+                <div class="mb-4">
+                    <h4 class="border-bottom pb-2 mb-4">
+                        <i class="bi bi-geo-alt-fill text-danger"></i> Dirección
+                    </h4>
+                </div>
+
+                <!-- ============ DDL ==============-->
+                <div class="row"> <!--Pais y Estado-->
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <select id="ddlpais" 
+                                    class="form-select" 
+                                    onblur="SelectValidate(event, this)"
+                                    th:field="${Usuario.Direcciones[0].Colonia.Municipio.Estado.Pais.IdPais}">
+                                <option value=0 selected>Selecciona un Pais</option>
+                                <option th:each="pais : ${Paises}" 
+                                        th:text="${pais.Nombre}" 
+                                        th:value="${pais.IdPais}"></option>
+                            </select>
+                            <label for="ddlpais"><i class="bi bi-globe-americas ms-1"></i>&nbsp;&nbsp;Pais</label>
+                        </div>
+                        <span class="error-message"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <select id="ddlestado" 
+                                    class="form-select" 
+                                    onblur="SelectValidate(event, this)"
+                                    th:field="${Usuario.Direcciones[0].Colonia.Municipio.Estado.IdEstado}">
+                                <option value=0>Selecciona un Estado</option>
+                            </select>
+                            <label for="ddlestado"><i class="bi bi-geo-alt ms-1"></i>&nbsp;&nbsp;Estado</label>
+                        </div>
+                        <span class="error-message"></span>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <select id="ddlmunicipio" 
+                                    class="form-select" 
+                                    onblur="SelectValidate(event, this)"
+                                    th:field="${Usuario.Direcciones[0].Colonia.Municipio.IdMunicipio}">
+                                <option value=0>Selecciona un Municipio</option>
+                            </select>
+                            <label for="ddlmunicipio"><i class="bi bi-map ms-1"></i>&nbsp;&nbsp;Municipio</label>
+                        </div>
+                        <span class="error-message"></span>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <select id="ddlcolonia" 
+                                    class="form-select" 
+                                    onblur="SelectValidate(event, this)"
+                                    th:field="*{Direcciones[0].Colonia.IdColonia}">
+                                <option value=0>Selecciona una Colonia</option>
+                            </select>
+                            <label for="ddlcolonia"><i class="bi bi-house-down ms-1"></i>&nbsp;&nbsp;Colonia</label>
+                        </div>
+                        <span class="error-message"></span>
+                    </div>
+                </div>
+                
+                <!-- ============ CALLE ============ -->
+                <div class="row">
+                    <div class="col mb-3">
+                        <div class="form-floating">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="calleInput"
+                                   th:field="*{Direcciones[0].Calle}"
+                                   placeholder="Av. Insurgentes">
+                            <label for="calleInput"><i class="bi bi-signpost ms-1"></i>&nbsp;&nbsp;Calle</label>
+                        </div>
+                        <span class="text-danger" th:if="${#fields.hasErrors('Direcciones[0].Calle')}" th:errors="${Usuario.Direcciones[0].Calle}" ></span>
+                    </div>
+                </div>
+                
+                <div class="row"> <!-- Numero Exterior e Interior-->
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="numeroExteriorInput"
+                                   th:field="*{Direcciones[0].NumeroInterior}"
+                                   placeholder="Mt. Piso. Num." >
+                           <label for="numeroExteriorInput"><i class="bi bi-signpost-split ms-1"></i>&nbsp;&nbsp;Numero Exterior</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="numeroInteriorInput"
+                                   th:field="*{Direcciones[0].NumeroExterior}"
+                                   placeholder="Numero Exterior">
+                            <label for="numeroInteriorInput"><i class="bi bi-signpost-split ms-1"></i>&nbsp;&nbsp;Numero Interior</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-lg btn-success w-100 fw-bold">Agregar Usuario</button>
+        </form>
+        
+        <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+        
+        <script>
+            $('#formUsuario').keydown(function(event) {
+                if (event.keyCode === 13) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+            
+            function SoloLetras(event, input){
+                let key = event.key;
+                const ascii = event.keyCode;
+                const RegExp = /[a-zA-Z]+/;
+                
+                if(RegExp.test(key)){
+                    if (ascii >= 65 && ascii <= 90 || ascii >= 97 && ascii <= 122) {
+                        $(input).css('background-color', 'transparent');
+                        $(input).parent().siblings(".error-message").text("");
+                    } else {
+                        event.preventDefault();
+                    }
+                }else{
+                    event.preventDefault();
+                    $(input).css('background-color', 'rgba(255,181,176,0.5)');
+                    $(input).parent().siblings(".error-message").text("No se permiten numeros, espacios en blanco o simbolos").addClass("text-danger");
+                }
+            }
+            
+            function LetrasConAcentos(event, input){
+                let key = event.key;
+                const RegExp = /[a-zA-ZáéíóúÁÉÍÓÚñÑ]+/;
+                const ascii = event.keyCode;
+                if(RegExp.test(key)){
+                    if (ascii >= 65 && ascii <= 90 || ascii >= 97 && ascii <= 122) {
+                        $(input).css('background-color', 'transparent');
+                        $(input).addClass("is-valid").removeClass("is-invalid");
+                        $(input).parent().siblings(".error-message").text("");
+                    } else {
+                        event.preventDefault();
+                    }
+                }else{
+                    event.preventDefault();
+                    $(input).css('background-color', 'rgba(255,181,176,0.5)');
+                    $(input).addClass("is-invalid").removeClass("is-valid");
+                    $(input).parent().siblings(".error-message").text("No se permiten numeros, espacios en blanco o simbolos").addClass("text-danger");
+                }
+            }
+            function FechaValidate(event, input){
+                const hoy = new Date().toISOString().split('T')[0]; //Limpia la fecha despues de la T - blablablaT00:00
+                //const hoy2 = new Date().toISOString();
+                $(input).attr('max', hoy);
+                //console.log(hoy2)
+                let key = event.target.value;
+                const RegExp = /\d{4}(\-\d{2}){2}/;
+                let fechaIngresada = new Date(key);
+                let fechaHoy = new Date(hoy);
+                
+                if (fechaIngresada < fechaHoy) {
+                    $(input).css('background-color', 'transparent');
+                    $(input).addClass("is-valid").removeClass("is-invalid");
+                    $(input).parent().siblings(".error-message").text("");
+                } else {
+                    $(input).css('background-color', 'rgba(255,181,176,0.5)');
+                    $(input).addClass("is-invalid").removeClass("is-valid");
+                    $(input).parent().siblings(".error-message").text("Ingrese una fecha valida y anterior a hoy").addClass("text-danger");
+                }
+            }
+            
+            function PasswordValidate(event, input){
+                let key = event.target.value;
+                const RegExp = /((?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W]).{8,64})/;
+                if(RegExp.test(key)){
+                    $(input).css('background-color', 'transparent');
+                    $(input).addClass("is-valid").removeClass("is-invalid");
+                    $(input).parent().siblings(".error-message").text("");
+                }else{
+                    event.preventDefault();
+                    $(input).css('background-color', 'rgba(255,181,176,0.5)');
+                    $(input).addClass("is-invalid").removeClass("is-valid");
+                    $(input).parent().siblings(".error-message").text("La contraseña debe contener; un numero, una letra mayuscula, un catacter especial y una longitud de 8 caracteres").addClass("text-danger");
+                }
+            }
+            function UsernameValidate(event, input){
+                let key = event.target.value;
+                const RegExp = /^[a-zA-Z][a-zA-Z0-9-_]{3,32}$/;
+                if(RegExp.test(key)){
+                    $(input).css('background-color', 'transparent');
+                    $(input).addClass("is-valid").removeClass("is-invalid");
+                    $(input).parent().siblings(".error-message").text("");
+                }else{
+                    event.preventDefault();
+                    $(input).css('background-color', 'rgba(255,181,176,0.5)');
+                    $(input).addClass("is-invalid").removeClass("is-valid");
+                    $(input).parent().siblings(".error-message").text("El nombre de usuario debe tener al menor 3 caracteres, iniciar con una letra, debe contener un numero y no contener simbolos").addClass("text-danger");
+                }
+            }
+            function EmailValidate(event, input){
+                let key = event.target.value;
+                const RegExp = /\b[\w\.-]+@[\w\.-]+\.\w{2,4}\b/;
+                if(RegExp.test(key)){
+                    $(input).css('background-color', 'transparent');
+                    $(input).addClass("is-valid").removeClass("is-invalid");
+                    $(input).parent().siblings(".error-message").text("");
+                }else{
+                    event.preventDefault();
+                    $(input).css('background-color', 'rgba(255,181,176,0.5)');
+                    $(input).addClass("is-invalid").removeClass("is-valid");
+                    $(input).parent().siblings(".error-message").text("Por favor ingresa un correo valido").addClass("text-danger");
+                }
+            }
+            function PhoneValidate(event, input){
+                let key = event.target.value;
+                const RegExp = /(\+?( |-|\.)?\d{1,2}( |-|\.)?)?(\(?\d{3}\)?|\d{3})( |-|\.)?(\d{3}( |-|\.)?\d{4})/;
+                if(RegExp.test(key)){
+                    $(input).css('background-color', 'transparent');
+                    $(input).addClass("is-valid").removeClass("is-invalid");
+                    $(input).parent().siblings(".error-message").text("");
+                }else{
+                    event.preventDefault();
+                    $(input).css('background-color', 'rgba(255,181,176,0.5)');
+                    $(input).addClass("is-invalid").removeClass("is-valid");
+                    $(input).parent().siblings(".error-message").text("Por favor ingresa un numero valido de 10 digitos").addClass("text-danger");
+                }
+            }
+            function CurpValidate(event, input){
+                let key = event.target.value;
+                const RegExp = /[A-Z]{1}[AEIOU]{1}[A-Z]{2}[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])[HM]{1}(AS|BC|BS|CC|CS|CH|CL|CM|DF|DG|GT|GR|HG|JC|MC|MN|MS|NT|NL|OC|PL|QT|QR|SP|SL|SR|TC|TS|TL|VZ|YN|ZS|NE)[B-DF-HJ-NP-TV-Z]{3}[0-9A-Z]{1}[0-9]{1}/;
+                if(RegExp.test(key)){
+                    $(input).css('background-color', 'transparent');
+                    $(input).addClass("is-valid").removeClass("is-invalid");
+                    $(input).parent().siblings(".error-message").text("");
+                }else{
+                    event.preventDefault();
+                    $(input).css('background-color', 'rgba(255,181,176,0.5)');
+                    $(input).addClass("is-invalid").removeClass("is-valid");
+                    $(input).parent().siblings(".error-message").text("Por favor ingresa un CURP valido de 18 caracteres").addClass("text-danger");
+                }
+            }
+            function SelectValidate(event, input){
+                let key = event.target.value;
+                
+                if(key > 0){
+                    $(input).css('background-color', 'transparent');
+                    $(input).addClass("is-valid").removeClass("is-invalid");
+                    $(input).parent().siblings(".error-message").text("");
+                }else{
+                    event.preventDefault();
+                    $(input).css('background-color', 'rgba(255,181,176,0.5)');
+                    $(input).addClass("is-invalid").removeClass("is-valid");
+                    $(input).parent().siblings(".error-message").text("Por favor selecciona una opcion").addClass("text-danger");
+                }
+            }
+            
+            
+            $(document).ready(function () {
+
+                if ($('#ddlpais').val() > 0) {
+                    console.log("El select pais tiene un valor de " + $('#ddlpais').val());
+                    $("#ddlpais").addClass("is-valid");
+                    $.ajax({
+                        url: "http://localhost:8080/api/estado/pais/" + $("#ddlpais").val(),
+                        method: 'GET',
+                        dataType: 'json',
+                        success: function (data, textStatus, jqXHR) {
+                            if (data.Correct) {
+                                $("#ddlestado").empty();
+                                $("#ddlestado").append("<option value=0 selected>Selecciona un Estado</option>");
+                                $.each(data.Objects, function (i, estado) {
+                                    $("#ddlestado").append("<option value=" + estado.idEstado + ">" + estado.nombre + "</option>");
+                                });
+                            }
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            alert("Something went wrong :c");
+                        }
+                    });
+                    console.log($("#ddlestado").val());
+                } else {
+                    console.log("El select está vacío o solo tiene un placeholder.");
+                }
+                
+                
+                //DDL PAIS
+                $("#ddlpais").change(function () {
+                    if ($("#ddlpais").val() == 0) {
+                        $("#ddlestado").empty();
+                        $("#ddlestado").append("<option value=0 selected>Selecciona un Estado</option>");
+                    } else {
+                        $.ajax({
+                            url: "http://localhost:8080/api/estado/pais/" + $("#ddlpais").val(),
+                            method: 'GET',
+                            dataType: 'json',
+                            success: function (data, textStatus, jqXHR) {
+                                if (data.Correct) {
+                                    $("#ddlestado").empty();
+                                    $("#ddlestado").append("<option value=0 selected>Selecciona un Estado</option>");
+                                    $.each(data.Objects, function (i, estado) {
+                                        $("#ddlestado").append("<option value=" + estado.idEstado + ">" + estado.nombre + "</option>");
+                                    });
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                alert("Something went wrong :c");
+                            }
+                        });
+                    }
+                });
+                
+                //DDL ESTADO
+                $("#ddlestado").change(function () {
+                    if ($("#ddlestado").val() == 0) {
+                        $("#ddlmunicipio").empty();
+                        $("#ddlmunicipio").append("<option value=0 selected>Selecciona un Municipio</option>");
+                    } else {
+                        $.ajax({
+                            url: "http://localhost:8080/api/municipio/estado/" + $("#ddlestado").val(),
+                            method: 'GET',
+                            dataType: 'json',
+                            success: function (data, textStatus, jqXHR) {
+                                if (data.Correct) {
+                                    $("#ddlmunicipio").empty();
+                                    $("#ddlmunicipio").append("<option value=0 selected>Selecciona un Municipio</option>");
+                                    $.each(data.Objects, function (i, municipio) {
+                                        $("#ddlmunicipio").append("<option value=" + municipio.idMunicipio + ">" + municipio.nombre + "</option>");
+                                    });
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                alert("Something went wrong :c");
+                            }
+                        });
+                    }
+                });
+                
+                //DDL MUNICIPIO
+                $("#ddlmunicipio").change(function () {
+                    if ($("#ddlmunicipio").val() == 0) {
+                        $("#ddlcolonia").empty();
+                        $("#ddlcolonia").append("<option value=0 selected>Selecciona una Colonia</option>");
+                    } else {
+                        $.ajax({
+                            url: "http://localhost:8080/api/colonia/municipio/" + $("#ddlmunicipio").val(),
+                            method: 'GET',
+                            dataType: 'json',
+                            success: function (data, textStatus, jqXHR) {
+
+                                if (data.Correct) {
+                                    $("#ddlcolonia").empty();
+                                    $("#ddlcolonia").append("<option value=0 selected>Selecciona una Colonia</option>");
+                                    $.each(data.Objects, function (i, colonia) {
+                                        $("#ddlcolonia").append("<option value=" + colonia.idColonia + ">" + colonia.nombre + "</option>");
+                                    });
+                                }
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                alert("Something went wrong :c");
+                            }
+                        });
+                    }
+                });
+            });
+            
+            
+        </script>
+    </body>
+</html>

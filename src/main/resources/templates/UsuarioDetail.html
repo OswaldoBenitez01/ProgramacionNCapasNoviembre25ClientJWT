@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Detalle Usuario</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        
+        <style>
+            .image-container {
+                width: 150px;
+                max-width: 150px;
+                margin: auto;
+                border-radius: 50%;
+                overflow: hidden;
+            }
+
+            .image-container .overlay {
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 100%;
+                width: 100%;
+                opacity: 0;
+                transition: .5s ease;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .image-container:hover .overlay {
+                opacity: 1;
+            }
+        </style>
+    </head>
+    <body class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+            <h4>Información del Usuario</h4>
+            <a th:href="@{/usuario}" class="btn btn-secondary btn-sm">Volver</a>
+        </div>
+        
+        <!-- INFO BASICA USUARIO -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="me-4">
+                <div class="image-container position-relative">
+                    <img class="object-fit-cover" 
+                         th:src="${Usuario.Imagen != null ? 'data:image/*;base64,' + Usuario.Imagen : 'https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png'}" 
+                         alt="Foto de perfil" 
+                         width="150" 
+                         height="150">
+                    <div class="overlay">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editarImagen">
+                            Editar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card flex-fill">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <h3 class="text-primary mb-3 fw-bold"
+                            th:text="|${Usuario.Nombre} ${Usuario.ApellidoPaterno} ${Usuario.ApellidoMaterno ?: ''}|">
+                        </h3>
+                        <button class="btn btn-primary btn-sm mb-3" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modalEditarUsuario">
+                            <i class="bi bi-pencil"></i>&nbsp;&nbsp;&nbsp;Editar Información
+                        </button>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Rol: </strong> 
+                                <span class="badge bg-primary" th:if="${Usuario.Rol != null}" th:text="${Usuario.Rol.Nombre}"></span>
+                                <span class="badge bg-danger" th:unless="${Usuario.Rol != null}">Sin Asignar</span>
+                            </p>
+                            <p class="mb-1"><strong>Username: </strong><span th:text="${Usuario.Username}"></span></p>
+                            <p class="mb-1"><strong>Email: </strong><span th:text="${Usuario.Email}"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Teléfono: </strong>
+                                <span th:if="${Usuario.Telefono != null}" th:text="${Usuario.Telefono}"></span>
+                                <span th:unless="${Usuario.Telefono != null}" class="text-muted">No registrado</span>
+                            </p>
+                            <p class="mb-1"><strong>CURP: </strong>
+                                <span th:if="${Usuario.Curp != null}" th:text="${Usuario.Curp}"></span>
+                                <span th:unless="${Usuario.Curp != null}" class="text-muted">No registrado</span>
+                            </p>
+                            <p class="mb-1"><strong>Fecha Nacimiento: </strong>
+                                <span th:if="${Usuario.FechaNacimiento != null}" th:text="${Usuario.FechaNacimiento}"></span>
+                                <span th:unless="${Usuario.FechaNacimiento != null}" class="text-muted">No registrada</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- DIRECCIONES -->
+        <div class="d-flex justify-content-between mb-3">
+            <h4>Direcciones</h4>
+            <button class="btn btn-success btn-sm"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#modalAgregarDireccion">
+                <i class="bi bi-plus"></i>&nbsp;&nbsp;Agregar Dirección
+            </button>
+        </div>
+        
+        <div th:if="${Usuario.Direcciones == null || #lists.isEmpty(Usuario.Direcciones)}" 
+             class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Sin direcciones registradas
+        </div>
+        
+        <ul class="" th:unless="${Usuario.Direcciones == null || #lists.isEmpty(Usuario.Direcciones)}">
+            <li class="list-group-item" th:each="direccion : ${Usuario.Direcciones}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong th:text="|${direccion.Calle} ${direccion.NumeroInterior ?: 'S/N'} ${direccion.NumeroExterior}|"></strong>
+                        <br>
+                        <small class="text-muted" th:if="${direccion.Colonia != null}">
+                            Col. <span th:text="${direccion.Colonia.Nombre}"></span>
+                            <span th:if="${direccion.Colonia.Municipio != null}">
+                                - <span th:text="${direccion.Colonia.Municipio.Nombre}"></span>
+                            </span>
+                            <span th:if="${direccion.Colonia.Municipio != null && direccion.Colonia.Municipio.Estado != null}">
+                                , <span th:text="${direccion.Colonia.Municipio.Estado.Nombre}"></span>
+                            </span>
+                            <span th:if="${direccion.Colonia.Municipio != null && direccion.Colonia.Municipio.Estado != null && direccion.Colonia.Municipio.Estado.Pais != null}">
+                                , <span th:text="${direccion.Colonia.Municipio.Estado.Pais.Nombre}"></span>
+                            </span>
+                        </small>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-danger btn-sm"
+                                th:onclick="|eliminarDireccion(${direccion.IdDireccion}, ${Usuario.IdUsuario})|">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <button class="btn btn-warning btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalEditarDireccion"
+                                th:attr="data-usuario=${Usuario.IdUsuario},
+                                         data-direccion=${direccion.IdDireccion},
+                                         data-pais=${direccion.Colonia?.Municipio?.Estado?.Pais?.IdPais ?: 0},
+                                         data-estado=${direccion.Colonia?.Municipio?.Estado?.IdEstado ?: 0},
+                                         data-municipio=${direccion.Colonia?.Municipio?.IdMunicipio ?: 0},
+                                         data-colonia=${direccion.Colonia?.IdColonia ?: 0},
+                                         data-calle=${direccion.Calle},
+                                         data-num-int=${direccion.NumeroInterior ?: ''},
+                                         data-num-ext=${direccion.NumeroExterior}">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </div>
+                </div>
+            </li>
+        </ul>
+        
+        <!-- MODAL EDITAR USUARIO -->
+        <div class="modal fade" id="modalEditarUsuario" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-person-fill text-primary"></i> Editar Usuario
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/usuario/formEditable}" method="post">
+                        <div class="modal-body">
+                            <input type="hidden" name="IdUsuario" th:value="${Usuario.IdUsuario}">
+                            <input type="hidden" name="Direcciones[0].IdDireccion" value="-1">
+                            <input type="hidden" name="Status" th:value="${Usuario.Status}">
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label"><i class="bi bi-person-fill"></i> Nombre</label>
+                                    <input type="text" class="form-control" name="Nombre" 
+                                           th:value="${Usuario.Nombre}" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label"><i class="bi bi-person"></i> Apellido Paterno</label>
+                                    <input type="text" class="form-control" name="ApellidoPaterno" 
+                                           th:value="${Usuario.ApellidoPaterno}" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label"><i class="bi bi-person"></i> Apellido Materno</label>
+                                    <input type="text" class="form-control" name="ApellidoMaterno" 
+                                           th:value="${Usuario.ApellidoMaterno}">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-card-text"></i> CURP</label>
+                                    <input type="text" class="form-control" name="Curp" 
+                                           th:value="${Usuario.Curp}" maxlength="18">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label"><i class="bi bi-calendar-event"></i> Fecha Nacimiento</label>
+                                    <input type="date" class="form-control" name="FechaNacimiento" 
+                                           th:value="${Usuario.FechaNacimiento}">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label"><i class="bi bi-gender-ambiguous"></i> Género</label>
+                                    <select class="form-select" name="Sexo">
+                                        <option value="N" th:selected="${Usuario.Sexo == 'N'}">No definido</option>
+                                        <option value="H" th:selected="${Usuario.Sexo == 'H'}">Hombre</option>
+                                        <option value="M" th:selected="${Usuario.Sexo == 'M'}">Mujer</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label"><i class="bi bi-person-circle"></i> Username</label>
+                                    <input type="text" class="form-control" name="Username" 
+                                           th:value="${Usuario.Username}" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label"><i class="bi bi-briefcase"></i> Rol/Puesto</label>
+                                    <select class="form-select" name="Rol.IdRol" required>
+                                        <option value="0">Selecciona un Rol</option>
+                                        <option th:each="rol : ${Roles}"
+                                                th:text="${rol.Nombre}"
+                                                th:value="${rol.IdRol}"
+                                                th:selected="${Usuario.Rol != null && rol.IdRol == Usuario.Rol.IdRol}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label"><i class="bi bi-envelope-fill"></i> Email</label>
+                                    <input type="email" class="form-control" name="Email" 
+                                           th:value="${Usuario.Email}" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label"><i class="bi bi-telephone-fill"></i> Teléfono</label>
+                                    <input type="tel" class="form-control" name="Telefono" 
+                                           th:value="${Usuario.Telefono}" maxlength="10">
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label"><i class="bi bi-phone-fill"></i> Celular</label>
+                                    <input type="tel" class="form-control" name="Celular" 
+                                           th:value="${Usuario.Celular}" maxlength="10">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-shield-lock-fill"></i> Contraseña</label>
+                                    <input type="text" class="form-control" name="Password" 
+                                           th:value="${Usuario.Password}" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MODAL AGREGAR DIRECCION -->
+        <div class="modal fade" id="modalAgregarDireccion" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-geo-alt-fill text-success"></i> Agregar Dirección
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/usuario/formEditable}" method="post">
+                        <div class="modal-body">
+                            <input type="hidden" name="IdUsuario" th:value="${Usuario.IdUsuario}">
+                            <input type="hidden" name="Direcciones[0].IdDireccion" value="0">
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-globe-americas"></i> País</label>
+                                    <select id="add-pais" class="form-select" 
+                                            name="Direcciones[0].Colonia.Municipio.Estado.Pais.IdPais" required>
+                                        <option value="0">Selecciona un País</option>
+                                        <option th:each="pais : ${Paises}" 
+                                                th:text="${pais.Nombre}" 
+                                                th:value="${pais.IdPais}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-geo-alt"></i> Estado</label>
+                                    <select id="add-estado" class="form-select"
+                                            name="Direcciones[0].Colonia.Municipio.Estado.IdEstado" required>
+                                        <option value="0">Selecciona un Estado</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-map"></i> Municipio</label>
+                                    <select id="add-municipio" class="form-select"
+                                            name="Direcciones[0].Colonia.Municipio.IdMunicipio" required>
+                                        <option value="0">Selecciona un Municipio</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-house-down"></i> Colonia</label>
+                                    <select id="add-colonia" class="form-select"
+                                            name="Direcciones[0].Colonia.IdColonia" required>
+                                        <option value="0">Selecciona una Colonia</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col mb-3">
+                                    <label class="form-label"><i class="bi bi-signpost"></i> Calle</label>
+                                    <input type="text" class="form-control" name="Direcciones[0].Calle" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-signpost-split"></i> Número Interior</label>
+                                    <input type="text" class="form-control" name="Direcciones[0].NumeroInterior">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-signpost-split"></i> Número Exterior</label>
+                                    <input type="text" class="form-control" name="Direcciones[0].NumeroExterior" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success">Agregar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MODAL EDITAR DIRECCION -->
+        <div class="modal fade" id="modalEditarDireccion" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-geo-alt-fill text-warning"></i> Editar Dirección
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form th:action="@{/usuario/formEditable}" method="post">
+                        <div class="modal-body">
+                            <input type="hidden" name="IdUsuario" id="edit-idusuario">
+                            <input type="hidden" name="Direcciones[0].IdDireccion" id="edit-iddireccion">
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-globe-americas"></i> País</label>
+                                    <select id="edit-pais" class="form-select" 
+                                            name="Direcciones[0].Colonia.Municipio.Estado.Pais.IdPais" required>
+                                        <option value="0">Selecciona un País</option>
+                                        <option th:each="pais : ${Paises}" 
+                                                th:text="${pais.Nombre}" 
+                                                th:value="${pais.IdPais}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-geo-alt"></i> Estado</label>
+                                    <select id="edit-estado" class="form-select"
+                                            name="Direcciones[0].Colonia.Municipio.Estado.IdEstado" required>
+                                        <option value="0">Selecciona un Estado</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-map"></i> Municipio</label>
+                                    <select id="edit-municipio" class="form-select"
+                                            name="Direcciones[0].Colonia.Municipio.IdMunicipio" required>
+                                        <option value="0">Selecciona un Municipio</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-house-down"></i> Colonia</label>
+                                    <select id="edit-colonia" class="form-select"
+                                            name="Direcciones[0].Colonia.IdColonia" required>
+                                        <option value="0">Selecciona una Colonia</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col mb-3">
+                                    <label class="form-label"><i class="bi bi-signpost"></i> Calle</label>
+                                    <input type="text" class="form-control" id="edit-calle" 
+                                           name="Direcciones[0].Calle" required>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-signpost-split"></i> Número Interior</label>
+                                    <input type="text" class="form-control" id="edit-numint"
+                                           name="Direcciones[0].NumeroInterior">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label"><i class="bi bi-signpost-split"></i> Número Exterior</label>
+                                    <input type="text" class="form-control" id="edit-numext"
+                                           name="Direcciones[0].NumeroExterior" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-warning">Actualizar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- MODAL EDITAR IMAGEN -->
+        <div class="modal fade" id="editarImagen" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5">Selecciona una foto</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form th:action="@{/usuario/updatePhoto}" method="post" enctype="multipart/form-data">
+                            <div class="input-group">
+                                <input type="hidden" name="IdUsuario" th:value="${Usuario.IdUsuario}">
+                                <input type="file" 
+                                       name="imagenUsuario" 
+                                       class="form-control" 
+                                       id="inputImagenUsuario" 
+                                       accept=".png, .jpeg, .jpg"
+                                       aria-describedby="photoHelp">
+                                <button th:if="${Usuario.Imagen != null}" 
+                                        class="btn btn-danger" 
+                                        type="button" 
+                                        th:onclick="|eliminarFoto(${Usuario.IdUsuario})|">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-cloud-upload"></i> Actualizar
+                                </button>
+                            </div>
+                            <div id="photoHelp" class="form-text ps-1">Tu imagen debe ser un formato válido (PNG, JPG, JPEG)</div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SCRIPTS -->
+        <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        
+        <script>
+            const Toast = Swal.mixin({
+                toast: true,
+                position: "bottom-start",
+                showConfirmButton: false,
+                showCloseButton: true,
+                timer: 6000,
+                timerProgressBar: true
+            });
+            
+            function eliminarDireccion(idDireccion, idUsuario) {
+                Swal.fire({
+                    title: '¿Eliminar dirección?',
+                    text: 'No podrás revertir esta acción',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/usuario/deleteAddress/' + idDireccion + '/' + idUsuario;
+                    }
+                });
+            }
+            
+            function eliminarFoto(IdUsuario) {
+                Swal.fire({
+                    title: '¿Eliminar foto?',
+                    text: 'Se restaurará la imagen por defecto',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch('/usuario/deletePhoto/' + IdUsuario, {
+                            method: 'POST'
+                        }).then(response => {
+                            if (response.redirected) {
+                                window.location.href = response.url;
+                            }
+                        });
+                    }
+                });
+            }
+            
+            document.getElementById('modalEditarDireccion').addEventListener('show.bs.modal', function(event) {
+                const boton = event.relatedTarget;
+                
+                document.getElementById('edit-idusuario').value = boton.getAttribute('data-usuario');
+                document.getElementById('edit-iddireccion').value = boton.getAttribute('data-direccion');
+                document.getElementById('edit-calle').value = boton.getAttribute('data-calle');
+                document.getElementById('edit-numint').value = boton.getAttribute('data-num-int') || '';
+                document.getElementById('edit-numext').value = boton.getAttribute('data-num-ext');
+                
+                const selectPais = document.getElementById('edit-pais');
+                const selectEstado = document.getElementById('edit-estado');
+                const selectMunicipio = document.getElementById('edit-municipio');
+                const selectColonia = document.getElementById('edit-colonia');
+                
+                selectPais.value = boton.getAttribute('data-pais');
+                selectEstado.setAttribute('data-selected', boton.getAttribute('data-estado'));
+                selectMunicipio.setAttribute('data-selected', boton.getAttribute('data-municipio'));
+                selectColonia.setAttribute('data-selected', boton.getAttribute('data-colonia'));
+                
+                $(selectPais).trigger('change');
+            });
+            
+            // ========== AGREGAR DIRECCIÓN ==========
+            
+            $('#add-pais').change(function() {
+                const idPais = $(this).val();
+                
+                if (idPais == '0') {
+                    $('#add-estado').html('<option value="0">Selecciona un Estado</option>');
+                    $('#add-municipio').html('<option value="0">Selecciona un Municipio</option>');
+                    $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
+                    return;
+                }
+                
+                $.get('http://localhost:8080/api/estado/pais/' + idPais, function(data) {
+                    $('#add-estado').html('<option value="0">Selecciona un Estado</option>');
+                    data.Objects.forEach(function(estado) {
+                        $('#add-estado').append('<option value="' + estado.idEstado + '">' + estado.nombre + '</option>');
+                    });
+                    $('#add-municipio').html('<option value="0">Selecciona un Municipio</option>');
+                    $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
+                });
+            });
+            
+            $('#add-estado').change(function() {
+                const idEstado = $(this).val();
+                
+                if (idEstado == '0') {
+                    $('#add-municipio').html('<option value="0">Selecciona un Municipio</option>');
+                    $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
+                    return;
+                }
+                
+                $.get('http://localhost:8080/api/municipio/estado/' + idEstado, function(data) {
+                    $('#add-municipio').html('<option value="0">Selecciona un Municipio</option>');
+                    data.Objects.forEach(function(municipio) {
+                        $('#add-municipio').append('<option value="' + municipio.idMunicipio + '">' + municipio.nombre + '</option>');
+                    });
+                    $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
+                });
+            });
+            
+            $('#add-municipio').change(function() {
+                const idMunicipio = $(this).val();
+                
+                if (idMunicipio == '0') {
+                    $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
+                    return;
+                }
+                
+                $.get('http://localhost:8080/api/colonia/municipio/' + idMunicipio, function(data) {
+                    $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
+                    data.Objects.forEach(function(colonia) {
+                        $('#add-colonia').append('<option value="' + colonia.idColonia + '">' + colonia.nombre + '</option>');
+                    });
+                });
+            });
+            
+            // ========== EDITAR DIRECCIÓN ==========
+            
+            $('#edit-pais').change(function() {
+                const idPais = $(this).val();
+                const estadoSeleccionado = $('#edit-estado').attr('data-selected') || '0';
+                
+                if (idPais == '0') {
+                    $('#edit-estado').html('<option value="0">Selecciona un Estado</option>');
+                    $('#edit-municipio').html('<option value="0">Selecciona un Municipio</option>');
+                    $('#edit-colonia').html('<option value="0">Selecciona una Colonia</option>');
+                    return;
+                }
+                
+                $.get('http://localhost:8080/api/estado/pais/' + idPais, function(data) {
+                    $('#edit-estado').html('<option value="0">Selecciona un Estado</option>');
+                    data.Objects.forEach(function(estado) {
+                        const selected = estado.idEstado == estadoSeleccionado ? 'selected' : '';
+                        $('#edit-estado').append('<option value="' + estado.idEstado + '" ' + selected + '>' + estado.nombre + '</option>');
+                    });
+                    
+                    if (estadoSeleccionado != '0') {
+                        $('#edit-estado').trigger('change');
+                    }
+                });
+            });
+            
+            $('#edit-estado').change(function() {
+                const idEstado = $(this).val();
+                const municipioSeleccionado = $('#edit-municipio').attr('data-selected') || '0';
+                
+                if (idEstado == '0') {
+                    $('#edit-municipio').html('<option value="0">Selecciona un Municipio</option>');
+                    $('#edit-colonia').html('<option value="0">Selecciona una Colonia</option>');
+                    return;
+                }
+                
+                $.get('http://localhost:8080/api/municipio/estado/' + idEstado, function(data) {
+                    $('#edit-municipio').html('<option value="0">Selecciona un Municipio</option>');
+                    data.Objects.forEach(function(municipio) {
+                        const selected = municipio.idMunicipio == municipioSeleccionado ? 'selected' : '';
+                        $('#edit-municipio').append('<option value="' + municipio.idMunicipio + '" ' + selected + '>' + municipio.nombre + '</option>');
+                    });
+                    
+                    if (municipioSeleccionado != '0') {
+                        $('#edit-municipio').trigger('change');
+                    }
+                });
+            });
+            
+            $('#edit-municipio').change(function() {
+                const idMunicipio = $(this).val();
+                const coloniaSeleccionada = $('#edit-colonia').attr('data-selected') || '0';
+                
+                if (idMunicipio == '0') {
+                    $('#edit-colonia').html('<option value="0">Selecciona una Colonia</option>');
+                    return;
+                }
+                
+                $.get('http://localhost:8080/api/colonia/municipio/' + idMunicipio, function(data) {
+                    $('#edit-colonia').html('<option value="0">Selecciona una Colonia</option>');
+                    data.Objects.forEach(function(colonia) {
+                        const selected = colonia.idColonia == coloniaSeleccionada ? 'selected' : '';
+                        $('#edit-colonia').append('<option value="' + colonia.idColonia + '" ' + selected + '>' + colonia.nombre + '</option>');
+                    });
+                });
+            });
+        </script>
+        
+        <!-- ALERTAS -->
+        <script th:if="${resultDeleteAddress}" th:inline="javascript">
+            [[${resultDeleteAddress.Correct}]] 
+                ? Toast.fire({ icon: 'success', title: [[${resultDeleteAddress.Object}]] })
+                : Toast.fire({ icon: 'error', title: [[${resultDeleteAddress.Object}]] });
+        </script>
+        
+        <script th:if="${resultEditUserBasic}" th:inline="javascript">
+            [[${resultEditUserBasic.Correct}]]
+                ? Toast.fire({ icon: 'success', title: [[${resultEditUserBasic.Object}]] })
+                : Toast.fire({ icon: 'error', title: [[${resultEditUserBasic.Object}]] });
+        </script>
+        
+        <script th:if="${resultAddAddress}" th:inline="javascript">
+            [[${resultAddAddress.Correct}]]
+                ? Toast.fire({ icon: 'success', title: [[${resultAddAddress.Object}]] })
+                : Toast.fire({ icon: 'error', title: [[${resultAddAddress.Object}]] });
+        </script>
+        
+        <script th:if="${resultEditAddress}" th:inline="javascript">
+            [[${resultEditAddress.Correct}]]
+                ? Toast.fire({ icon: 'success', title: [[${resultEditAddress.Object}]] })
+                : Toast.fire({ icon: 'error', title: [[${resultEditAddress.Object}]] });
+        </script>
+        
+        <script th:if="${resultUpdatePhoto}" th:inline="javascript">
+            [[${resultUpdatePhoto.Correct}]]
+                ? Toast.fire({ icon: 'success', title: [[${resultUpdatePhoto.Object}]] })
+                : Toast.fire({ icon: 'error', title: [[${resultUpdatePhoto.Object}]] });
+        </script>
+        
+    </body>
+</html>

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Listado de Usuarios</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    </head>
+    <body class="container py-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="text-secondary">Usuarios</h2>
+
+            <div class="btn-group">
+                <a th:href="@{/usuario/form}" class="btn btn-success">
+                    <i class="bi bi-person-plus-fill"></i> Agregar Usuario
+                </a>
+                <a th:href="@{/usuario/cargaMasiva}" class="btn btn-primary">
+                    <i class="bi bi-file-earmark-arrow-up"></i> Cargar archivo
+                </a>
+            </div>
+        </div>
+        
+        <div class="p-4 mb-4">
+            <h5 class="mb-3"> Buscar Usuario</h5>
+            
+            <form th:action="@{/usuario/busqueda}" th:object="${usuarioBusqueda}" method="post">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <input type="text"
+                               class="form-control"
+                               th:field="*{Nombre}"
+                               placeholder="Nombre">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text"
+                               class="form-control"
+                               th:field="*{ApellidoPaterno}"
+                               placeholder="Apellido Paterno">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text"
+                               class="form-control"
+                               th:field="*{ApellidoMaterno}"
+                               placeholder="Apellido Materno">
+                    </div>
+                    <div class="col-md-2">
+                         <select
+                            class="form-select"
+                            th:field="*{rol.IdRol}">
+                            <option value="-1">Todos los roles</option>
+                            <option value="0">Sin rol asignado</option>
+                            <option th:each="rol : ${Roles}"
+                                    th:text="${rol.Nombre}"
+                                    th:value="${rol.IdRol}"></option>
+                        </select> 
+                     </div>
+                    <div class="mt-3 col-md-1">
+                        <a th:href="@{/usuario}" class="btn btn-danger">
+                            <i class="bi bi-trash3"></i>
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+            </form>
+        </div>
+
+        <div th:if="${mensajeBusqueda != null || #lists.isEmpty(Usuarios)}" 
+             class="text-center py-5">
+            <i class="bi bi-search" style="font-size: 4rem; color: #dc3545"></i>
+            <h4 class="mt-3" style="color: #dc3545">No se encontraron coincidencias</h4>
+            <a th:href="@{/usuario}" class="btn btn-danger mt-2">
+                <i class="bi bi-x-circle"></i>&nbsp;&nbsp;Limpiar Filtros
+            </a>
+        </div>
+        
+        <div th:unless="${mensajeBusqueda != null || #lists.isEmpty(Usuarios)}" 
+             class="table-responsive rounded-2 shadow">
+            <table class="table align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Acciones</th>
+                        <th>Nombre / ID</th>
+                        <th>Informacion</th>
+                        <th>Contacto</th>
+                        <th>Direcciones</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="usuario : ${Usuarios}">
+                        <!--ACCIONES-->
+                        <td class="text-center">
+                            <div class="btn-group botonesdeaccion">
+                                <a th:href="@{/usuario/detail/{IdUsuario} (IdUsuario = ${usuario.IdUsuario})}" 
+                                   class="btn btn-outline-warning btn-sm rounded-pill me-2" title="Ver detalle">
+                                    <i class="bi bi-pencil-square"></i>
+                                </a> 
+                                <button th:onclick="|EliminarUsuario(${usuario.IdUsuario},  this)|"
+                                        class="btnEliminarUsuario btn btn-outline-danger btn-sm rounded-pill me-2" title="Eliminar">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </div>
+                        </td>
+
+                        <!--NOMBRE-->
+                        <td>
+                            <div class="fw-bold text-dark mb-1">
+                                <span class="badge bg-primary">ID: <span th:text="${usuario.IdUsuario}"></span></span>
+                                <span class="badge usuario-status-badge" 
+                                      th:classappend="${usuario.Status == 1} ? 'bg-info' : 'bg-danger'">
+                                    Status <span th:text="${usuario.Status}"></span>
+                                </span>
+                                <br>
+                                <span th:text="|${usuario.Nombre} ${usuario.ApellidoPaterno} ${usuario.ApellidoMaterno}|"></span>
+                            </div>
+                            <div th:switch="${usuario.Status}" class="usuario-status-text">
+                                <p th:case="0" class="text-danger small mb-0">Cuenta inactiva</p>
+                                <p th:case="1" class="text-success small mb-0">Cuenta activa</p>
+                            </div>
+                            <div class="text-secondary small">
+                                <i class="bi bi-person"></i> <span th:text="${usuario.Username}"></span>
+                            </div>
+                        </td>
+
+                        <!--INFORMACION-->
+                        <td>
+                            <div class="mb-1 small">
+                                <i class="bi bi-calendar"></i> Nacimiento: <span th:text="${usuario.FechaNacimiento}"></span><br>
+                                <i class="bi bi-gender-ambiguous"></i> Sexo: <span th:text="${usuario.Sexo}"></span>
+                            </div>
+                            <div class="mb-1 small">
+                                <i class="bi bi-shield-check"></i> CURP:
+                                <span th:if="${usuario.Curp != null}" th:text="${usuario.Curp}"></span>
+                                <span th:unless="${usuario.Curp != null}" class="text-danger">No hay CURP</span>
+                            </div>
+                            <div class="small">
+                                <i class="bi bi-person-badge"></i> <span class="fw-bold">Rol: </span>
+                                <span class="text-primary" th:if="${usuario.Rol != null}" th:text="${usuario.Rol.Nombre}"></span>
+                                <span class="text-danger" th:unless="${usuario.Rol != null}">Sin Asignar</span>
+                            </div>
+                        </td>
+                        
+                        <!-- CONTACTO -->
+                        <td>
+                            <div class="mb-1 small">
+                                <i class="bi bi-envelope"></i> Email: 
+                                <span class="text-primary" th:text="${usuario.Email}"></span>
+                            </div>
+                            <div class="mb-1 small">
+                                <i class="bi bi-phone"></i> Celular: 
+                                <span th:if="${usuario.Celular != null}" th:text="${usuario.Celular}"></span>
+                                <span th:unless="${usuario.Celular != null}" class="text-danger">No registrado</span>
+                            </div>
+                            <div class="mb-1 small">
+                                <i class="bi bi-telephone"></i> Telefono: 
+                                <span th:text="${usuario.Telefono}"></span>
+                            </div>
+                        </td>
+                        
+                        <!-- DIRECCIONES -->
+                        <td>
+                            <ul class="mb-0 ps-3 small" th:if="${usuario.Direcciones != null}">
+                                <li class="list-group-item" th:each="direccion : ${usuario.Direcciones}">
+                                    <i class="bi bi-geo"></i>
+                                    <span class="fw-bold" th:text="|${direccion.Calle} ${direccion.NumeroInterior} ${direccion.NumeroExterior}, 
+                                          ${direccion.Colonia.Nombre}|"></span> <br>
+                                    <span class="ms-3 text-secondary" th:text="|${direccion.Colonia.Municipio.Nombre}, 
+                                          ${direccion.Colonia.Municipio.Estado.Nombre}, 
+                                          ${direccion.Colonia.Municipio.Estado.Pais.Nombre}|"></span>
+                                </li>
+                            </ul>
+                            <div class="text-muted small" th:unless="${usuario.Direcciones != null}">Sin direcciones</div>
+                        </td>
+                        
+                        <!-- ESTADO -->
+                        <td class="ps-3">
+                            <div class="form-check form-switch align-center">
+                                <input class="form-check-input usuarioIsActive" 
+                                       type="checkbox" 
+                                       th:checked="${usuario.Status == 1}"
+                                       th:onchange="|usuarioIsActive(${usuario.IdUsuario}, this)|">
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!--
+         ====== EVENTOS ======
+        -->
+        <script>
+            const Toast = Swal.mixin({
+                toast: true,
+                animation: true,
+                position: "bottom-start",
+                showConfirmButton: false,
+                showCloseButton: true,
+                timer: 6000,
+                timerProgressBar: true,
+                theme: 'dark',
+                didOpen: (toast) => {
+                  toast.onmouseenter = Swal.stopTimer;
+                  toast.onmouseleave = Swal.resumeTimer;
+                }
+            });
+            
+            function EliminarUsuario(IdUsuario, input) {
+
+                Swal.fire({
+                    title: "¿Estás seguro de eliminar al usuario?",
+                    text: "¡No podrás revertir esta acción!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Sí, eliminar!",
+                    cancelButtonText: "Cancelar"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: "http://localhost:8080/api/usuario/" + IdUsuario,
+                            method: 'DELETE',
+                            dataType: 'json',
+                            success: function (data, textStatus, jqXHR) {
+                                $(input).parent().closest("tr").remove();
+                                Toast.fire({
+                                    icon: "success",
+                                    title: "Se elimino el usuario"
+                                });
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                Toast.fire({
+                                    icon: "error",
+                                    title: "No se pudo eliminar el usuario"
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // estilos iniciales 
+            $(document).ready(function() {
+                $('.usuarioIsActive').each(function() {
+                    const checkbox = $(this);
+                    const fila = checkbox.closest('tr');
+                    const contenido = fila.find('.botonesdeaccion, td:not(:last-child)');
+                    
+                    if (!checkbox.is(':checked')) {
+                        contenido.css({
+                            "pointer-events": "none",
+                            "opacity": "0.3"
+                        });
+                    }
+                });
+            });
+            
+            function usuarioIsActive(idUsuario, input){
+                const $input = $(input);
+                const $fila = $input.closest('tr');
+                const $contenido = $fila.find('.botonesdeaccion, td:not(:last-child)');
+                const $badgeSpan = $fila.find('.usuario-status-badge span');
+                const $badge = $fila.find('.usuario-status-badge');
+                const $statusText = $fila.find('.usuario-status-text p');
+                
+                //ACTIVAR AL USUARIO
+                if ($input.is(':checked')) {
+                    let Status = 1;
+                    $.ajax({
+                        url: "http://localhost:8080/api/usuario/" + idUsuario + "?status=" + Status,
+                        method: 'PATCH',
+                        dataType: 'json',
+                        success: function (data, textStatus, jqXHR) {
+                            if (data.Correct) {
+                                $contenido.css({
+                                    "pointer-events": "all",
+                                    "opacity": "1"
+                                });
+                                $badgeSpan.text("1");
+                                $badge.removeClass("bg-danger").addClass("bg-info");
+                                $statusText.text("Cuenta activa")
+                                          .removeClass("text-danger")
+                                          .addClass("text-success");
+                                
+                                Toast.fire({
+                                    icon: "success",
+                                    title: "Se activó el usuario"
+                                });
+                            }
+                        },
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            $input.prop('checked', false);
+                            Toast.fire({
+                                icon: "error",
+                                title: "No se pudo activar el usuario"
+                            });
+                        }
+                    });
+                    //DESACTIVAR USUARIO
+                } else {
+                    Swal.fire({
+                        title: "¡Darás de baja al usuario! ¿Estás seguro?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Sí, dar de baja!",
+                        cancelButtonText: "Cancelar"
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            let Status = 0;
+                            $.ajax({
+                                url: "http://localhost:8080/api/usuario/" + idUsuario + "?status=" + Status,
+                                method: 'PATCH',
+                                dataType: 'json',
+                                success: function (data, textStatus, jqXHR) {
+                                    if (data.Correct) {
+                                        $contenido.css({
+                                            "pointer-events": "none",
+                                            "opacity": "0.3"
+                                        });
+                                        $badgeSpan.text("0");
+                                        $badge.removeClass("bg-info").addClass("bg-danger");
+                                        $statusText.text("Cuenta inactiva")
+                                                  .removeClass("text-success")
+                                                  .addClass("text-danger");
+                                        
+                                        Toast.fire({
+                                            icon: "success",
+                                            title: "Se desactivó el usuario"
+                                        });
+                                    }
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) {
+                                    $input.prop('checked', true);
+                                    Toast.fire({
+                                        icon: "error",
+                                        title: "No se pudo desactivar el usuario"
+                                    });
+                                }
+                            });
+                        } else {
+                            $input.prop('checked', true);
+                        }
+                    });
+                }
+            }
+        </script>
+        
+        <!--
+         ====== ALERTAS ======
+        -->
+        <script th:if="${resultDelete}" th:inline="javascript">
+            console.log([[${resultDelete}]]);
+            if ([[${resultDelete.Correct}]]){
+                Toast.fire({
+                    icon: "success",
+                    title: [[${resultDelete.Object}]]
+                });
+            } else {
+                Toast.fire({
+                    icon: "error",
+                    title: [[${resultDelete.Object}]]
+                });
+            }
+        </script>
+        <script th:if="${resultAddUserFull}" th:inline="javascript">
+            console.log([[${resultAddUserFull}]]);
+            if ([[${resultAddUserFull.Correct}]]){
+                Toast.fire({
+                    icon: "success",
+                    title: [[${resultAddUserFull.Object}]]
+                });
+            } else {
+                Toast.fire({
+                    icon: "error",
+                    title: [[${resultAddUserFull.Object}]]
+                });
+            }
+        </script>
+        <script th:if="${resultCargaMasiva}" th:inline="javascript">
+            console.log([[${resultCargaMasiva}]]);
+            if ([[${resultCargaMasiva.Correct}]]){
+                Toast.fire({
+                    icon: "success",
+                    title: [[${resultCargaMasiva.Object}]]
+                });
+            } else {
+                Toast.fire({
+                    icon: "error",
+                    title: [[${resultCargaMasiva.Object}]]
+                });
+            }
+        </script>
+    </body>
+</html>
