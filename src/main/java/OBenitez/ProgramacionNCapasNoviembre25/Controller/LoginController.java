@@ -4,8 +4,7 @@ package OBenitez.ProgramacionNCapasNoviembre25.Controller;
 import OBenitez.ProgramacionNCapasNoviembre25.ML.LoginRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,6 +12,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -46,23 +46,29 @@ public class LoginController {
                 String.class
             );
 
-            if (response.getStatusCode().is2xxSuccessful()) {
+            if (response.getStatusCode() == HttpStatus.OK) {
                 session.setAttribute("jwtToken", response.getBody());
                 return "redirect:/usuario";
             } else {
                 redirectAttributes.addFlashAttribute("error", "Usuario o contraseña incorrectos");
                 return "redirect:/login";
             }
+            
+        } catch (RestClientException ex) {
+            redirectAttributes.addFlashAttribute("error", "Error al conectarse al servidor");
+            return "redirect:/login";
         } catch (Exception ex) {
-            redirectAttributes.addFlashAttribute("error", "Error de conexión al servidor");
+            redirectAttributes.addFlashAttribute("error", "Error interno del sistema");
             return "redirect:/login";
         }
     }
     
     @GetMapping("/logout")
-    public String logout(HttpSession session) {
+    public String logout(HttpSession session, RedirectAttributes redirectAttributes) {
         session.invalidate();
+        redirectAttributes.addFlashAttribute("info", "Sesión cerrada correctamente");
         return "redirect:/login";
     }
 }
+
 

@@ -197,7 +197,11 @@
         <!--
          ====== EVENTOS ======
         -->
-        <script>
+
+        <script th:inline="javascript">
+            
+            var jwtToken = [[${jwtToken}]];
+            
             const Toast = Swal.mixin({
                 toast: true,
                 animation: true,
@@ -230,6 +234,9 @@
                             url: "http://localhost:8080/api/usuario/" + IdUsuario,
                             method: 'DELETE',
                             dataType: 'json',
+                            headers: {
+                                'Authorization': 'Bearer ' + jwtToken
+                            },
                             success: function (data, textStatus, jqXHR) {
                                 $(input).parent().closest("tr").remove();
                                 Toast.fire({
@@ -271,7 +278,7 @@
                 const $badgeSpan = $fila.find('.usuario-status-badge span');
                 const $badge = $fila.find('.usuario-status-badge');
                 const $statusText = $fila.find('.usuario-status-text p');
-                
+
                 //ACTIVAR AL USUARIO
                 if ($input.is(':checked')) {
                     let Status = 1;
@@ -279,6 +286,9 @@
                         url: "http://localhost:8080/api/usuario/" + idUsuario + "?status=" + Status,
                         method: 'PATCH',
                         dataType: 'json',
+                        headers: {
+                            'Authorization': 'Bearer ' + jwtToken
+                        },
                         success: function (data, textStatus, jqXHR) {
                             if (data.Correct) {
                                 $contenido.css({
@@ -288,9 +298,8 @@
                                 $badgeSpan.text("1");
                                 $badge.removeClass("bg-danger").addClass("bg-info");
                                 $statusText.text("Cuenta activa")
-                                          .removeClass("text-danger")
-                                          .addClass("text-success");
-                                
+                                    .removeClass("text-danger")
+                                    .addClass("text-success");
                                 Toast.fire({
                                     icon: "success",
                                     title: "Se activó el usuario"
@@ -299,13 +308,21 @@
                         },
                         error: function (jqXHR, textStatus, errorThrown) {
                             $input.prop('checked', false);
-                            Toast.fire({
-                                icon: "error",
-                                title: "No se pudo activar el usuario"
-                            });
+                            if (jqXHR.status === 401 || jqXHR.status === 403) {
+                                Toast.fire({
+                                    icon: "error",
+                                    title: "Sesión expirada"
+                                });
+                                setTimeout(() => window.location.href = '/login', 1500);
+                            } else {
+                                Toast.fire({
+                                    icon: "error",
+                                    title: "No se pudo activar el usuario"
+                                });
+                            }
                         }
                     });
-                    //DESACTIVAR USUARIO
+                //DESACTIVAR USUARIO
                 } else {
                     Swal.fire({
                         title: "¡Darás de baja al usuario! ¿Estás seguro?",
@@ -322,6 +339,9 @@
                                 url: "http://localhost:8080/api/usuario/" + idUsuario + "?status=" + Status,
                                 method: 'PATCH',
                                 dataType: 'json',
+                                headers: {
+                                    'Authorization': 'Bearer ' + jwtToken
+                                },
                                 success: function (data, textStatus, jqXHR) {
                                     if (data.Correct) {
                                         $contenido.css({
@@ -331,9 +351,8 @@
                                         $badgeSpan.text("0");
                                         $badge.removeClass("bg-info").addClass("bg-danger");
                                         $statusText.text("Cuenta inactiva")
-                                                  .removeClass("text-success")
-                                                  .addClass("text-danger");
-                                        
+                                            .removeClass("text-success")
+                                            .addClass("text-danger");
                                         Toast.fire({
                                             icon: "success",
                                             title: "Se desactivó el usuario"
@@ -342,10 +361,18 @@
                                 },
                                 error: function (jqXHR, textStatus, errorThrown) {
                                     $input.prop('checked', true);
-                                    Toast.fire({
-                                        icon: "error",
-                                        title: "No se pudo desactivar el usuario"
-                                    });
+                                    if (jqXHR.status === 401 || jqXHR.status === 403) {
+                                        Toast.fire({
+                                            icon: "error",
+                                            title: "Sesión expirada"
+                                        });
+                                        setTimeout(() => window.location.href = '/login', 1500);
+                                    } else {
+                                        Toast.fire({
+                                            icon: "error",
+                                            title: "No se pudo desactivar el usuario"
+                                        });
+                                    }
                                 }
                             });
                         } else {

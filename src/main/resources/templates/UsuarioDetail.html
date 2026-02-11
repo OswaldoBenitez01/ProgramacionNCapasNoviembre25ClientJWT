@@ -468,7 +468,9 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         
-        <script>
+        <script th:inline="javascript">
+            var jwtToken = [[${jwtToken}]];
+            
             const Toast = Swal.mixin({
                 toast: true,
                 position: "bottom-start",
@@ -541,125 +543,195 @@
             });
             
             // ========== AGREGAR DIRECCIÓN ==========
-            
+
             $('#add-pais').change(function() {
                 const idPais = $(this).val();
-                
                 if (idPais == '0') {
                     $('#add-estado').html('<option value="0">Selecciona un Estado</option>');
                     $('#add-municipio').html('<option value="0">Selecciona un Municipio</option>');
                     $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
                     return;
                 }
-                
-                $.get('http://localhost:8080/api/estado/pais/' + idPais, function(data) {
-                    $('#add-estado').html('<option value="0">Selecciona un Estado</option>');
-                    data.Objects.forEach(function(estado) {
-                        $('#add-estado').append('<option value="' + estado.idEstado + '">' + estado.nombre + '</option>');
-                    });
-                    $('#add-municipio').html('<option value="0">Selecciona un Municipio</option>');
-                    $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
+
+                $.ajax({
+                    url: 'http://localhost:8080/api/estado/pais/' + idPais,
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + jwtToken
+                    },
+                    success: function(data) {
+                        $('#add-estado').html('<option value="0">Selecciona un Estado</option>');
+                        data.Objects.forEach(function(estado) {
+                            $('#add-estado').append('<option value="' + estado.idEstado + '">' + estado.nombre + '</option>');
+                        });
+                        $('#add-municipio').html('<option value="0">Selecciona un Municipio</option>');
+                        $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
+                    },
+                    error: function(jqXHR) {
+                        if (jqXHR.status === 401 || jqXHR.status === 403) {
+                            window.location.href = '/login';
+                        }
+                    }
                 });
             });
-            
+
             $('#add-estado').change(function() {
                 const idEstado = $(this).val();
-                
                 if (idEstado == '0') {
                     $('#add-municipio').html('<option value="0">Selecciona un Municipio</option>');
                     $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
                     return;
                 }
-                
-                $.get('http://localhost:8080/api/municipio/estado/' + idEstado, function(data) {
-                    $('#add-municipio').html('<option value="0">Selecciona un Municipio</option>');
-                    data.Objects.forEach(function(municipio) {
-                        $('#add-municipio').append('<option value="' + municipio.idMunicipio + '">' + municipio.nombre + '</option>');
-                    });
-                    $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
+
+                $.ajax({
+                    url: 'http://localhost:8080/api/municipio/estado/' + idEstado,
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + jwtToken
+                    },
+                    success: function(data) {
+                        $('#add-municipio').html('<option value="0">Selecciona un Municipio</option>');
+                        data.Objects.forEach(function(municipio) {
+                            $('#add-municipio').append('<option value="' + municipio.idMunicipio + '">' + municipio.nombre + '</option>');
+                        });
+                        $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
+                    },
+                    error: function(jqXHR) {
+                        if (jqXHR.status === 401 || jqXHR.status === 403) {
+                            window.location.href = '/login';
+                        }
+                    }
                 });
             });
-            
+
             $('#add-municipio').change(function() {
                 const idMunicipio = $(this).val();
-                
                 if (idMunicipio == '0') {
                     $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
                     return;
                 }
-                
-                $.get('http://localhost:8080/api/colonia/municipio/' + idMunicipio, function(data) {
-                    $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
-                    data.Objects.forEach(function(colonia) {
-                        $('#add-colonia').append('<option value="' + colonia.idColonia + '">' + colonia.nombre + '</option>');
-                    });
+
+                $.ajax({
+                    url: 'http://localhost:8080/api/colonia/municipio/' + idMunicipio,
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + jwtToken
+                    },
+                    success: function(data) {
+                        $('#add-colonia').html('<option value="0">Selecciona una Colonia</option>');
+                        data.Objects.forEach(function(colonia) {
+                            $('#add-colonia').append('<option value="' + colonia.idColonia + '">' + colonia.nombre + '</option>');
+                        });
+                    },
+                    error: function(jqXHR) {
+                        if (jqXHR.status === 401 || jqXHR.status === 403) {
+                            window.location.href = '/login';
+                        }
+                    }
                 });
             });
+
             
             // ========== EDITAR DIRECCIÓN ==========
             
             $('#edit-pais').change(function() {
                 const idPais = $(this).val();
                 const estadoSeleccionado = $('#edit-estado').attr('data-selected') || '0';
-                
+
                 if (idPais == '0') {
                     $('#edit-estado').html('<option value="0">Selecciona un Estado</option>');
                     $('#edit-municipio').html('<option value="0">Selecciona un Municipio</option>');
                     $('#edit-colonia').html('<option value="0">Selecciona una Colonia</option>');
                     return;
                 }
-                
-                $.get('http://localhost:8080/api/estado/pais/' + idPais, function(data) {
-                    $('#edit-estado').html('<option value="0">Selecciona un Estado</option>');
-                    data.Objects.forEach(function(estado) {
-                        const selected = estado.idEstado == estadoSeleccionado ? 'selected' : '';
-                        $('#edit-estado').append('<option value="' + estado.idEstado + '" ' + selected + '>' + estado.nombre + '</option>');
-                    });
-                    
-                    if (estadoSeleccionado != '0') {
-                        $('#edit-estado').trigger('change');
+
+                $.ajax({
+                    url: 'http://localhost:8080/api/estado/pais/' + idPais,
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + jwtToken
+                    },
+                    success: function(data) {
+                        $('#edit-estado').html('<option value="0">Selecciona un Estado</option>');
+                        data.Objects.forEach(function(estado) {
+                            const selected = estado.idEstado == estadoSeleccionado ? 'selected' : '';
+                            $('#edit-estado').append('<option value="' + estado.idEstado + '" ' + selected + '>' + estado.nombre + '</option>');
+                        });
+
+                        if (estadoSeleccionado != '0') {
+                            $('#edit-estado').trigger('change');
+                        }
+                    },
+                    error: function(jqXHR) {
+                        if (jqXHR.status === 401 || jqXHR.status === 403) {
+                            window.location.href = '/login';
+                        }
                     }
                 });
             });
-            
+
             $('#edit-estado').change(function() {
                 const idEstado = $(this).val();
                 const municipioSeleccionado = $('#edit-municipio').attr('data-selected') || '0';
-                
+
                 if (idEstado == '0') {
                     $('#edit-municipio').html('<option value="0">Selecciona un Municipio</option>');
                     $('#edit-colonia').html('<option value="0">Selecciona una Colonia</option>');
                     return;
                 }
-                
-                $.get('http://localhost:8080/api/municipio/estado/' + idEstado, function(data) {
-                    $('#edit-municipio').html('<option value="0">Selecciona un Municipio</option>');
-                    data.Objects.forEach(function(municipio) {
-                        const selected = municipio.idMunicipio == municipioSeleccionado ? 'selected' : '';
-                        $('#edit-municipio').append('<option value="' + municipio.idMunicipio + '" ' + selected + '>' + municipio.nombre + '</option>');
-                    });
-                    
-                    if (municipioSeleccionado != '0') {
-                        $('#edit-municipio').trigger('change');
+
+                $.ajax({
+                    url: 'http://localhost:8080/api/municipio/estado/' + idEstado,
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + jwtToken
+                    },
+                    success: function(data) {
+                        $('#edit-municipio').html('<option value="0">Selecciona un Municipio</option>');
+                        data.Objects.forEach(function(municipio) {
+                            const selected = municipio.idMunicipio == municipioSeleccionado ? 'selected' : '';
+                            $('#edit-municipio').append('<option value="' + municipio.idMunicipio + '" ' + selected + '>' + municipio.nombre + '</option>');
+                        });
+
+                        if (municipioSeleccionado != '0') {
+                            $('#edit-municipio').trigger('change');
+                        }
+                    },
+                    error: function(jqXHR) {
+                        if (jqXHR.status === 401 || jqXHR.status === 403) {
+                            window.location.href = '/login';
+                        }
                     }
                 });
             });
-            
+
             $('#edit-municipio').change(function() {
                 const idMunicipio = $(this).val();
                 const coloniaSeleccionada = $('#edit-colonia').attr('data-selected') || '0';
-                
+
                 if (idMunicipio == '0') {
                     $('#edit-colonia').html('<option value="0">Selecciona una Colonia</option>');
                     return;
                 }
-                
-                $.get('http://localhost:8080/api/colonia/municipio/' + idMunicipio, function(data) {
-                    $('#edit-colonia').html('<option value="0">Selecciona una Colonia</option>');
-                    data.Objects.forEach(function(colonia) {
-                        const selected = colonia.idColonia == coloniaSeleccionada ? 'selected' : '';
-                        $('#edit-colonia').append('<option value="' + colonia.idColonia + '" ' + selected + '>' + colonia.nombre + '</option>');
-                    });
+
+                $.ajax({
+                    url: 'http://localhost:8080/api/colonia/municipio/' + idMunicipio,
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + jwtToken
+                    },
+                    success: function(data) {
+                        $('#edit-colonia').html('<option value="0">Selecciona una Colonia</option>');
+                        data.Objects.forEach(function(colonia) {
+                            const selected = colonia.idColonia == coloniaSeleccionada ? 'selected' : '';
+                            $('#edit-colonia').append('<option value="' + colonia.idColonia + '" ' + selected + '>' + colonia.nombre + '</option>');
+                        });
+                    },
+                    error: function(jqXHR) {
+                        if (jqXHR.status === 401 || jqXHR.status === 403) {
+                            window.location.href = '/login';
+                        }
+                    }
                 });
             });
         </script>
