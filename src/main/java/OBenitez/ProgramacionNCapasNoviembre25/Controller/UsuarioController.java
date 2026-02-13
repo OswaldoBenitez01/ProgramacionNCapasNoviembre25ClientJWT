@@ -75,17 +75,13 @@ public class UsuarioController {
             model.addAttribute("jwtToken", token);
 
         } catch (HttpClientErrorException ex) {
-            // Manejo específico de errores 4xx
             if (ex.getStatusCode() == HttpStatus.UNAUTHORIZED) {
-                // Token expirado o inválido - redirigir al login
                 session.invalidate();
                 return "redirect:/login";
             } else if (ex.getStatusCode() == HttpStatus.FORBIDDEN) {
-                // Sin permisos
                 session.invalidate();
                 return "redirect:/login";
             } else {
-                // Otro error 4xx
                 model.addAttribute("error", "Error: " + ex.getMessage());
                 model.addAttribute("Usuarios", new ArrayList<>());
                 model.addAttribute("Roles", new ArrayList<>());
@@ -93,14 +89,12 @@ public class UsuarioController {
                 model.addAttribute("tokenValido", false);
             }
         } catch (HttpServerErrorException ex) {
-            // Error 5xx del servidor
             model.addAttribute("error", "Error del servidor");
             model.addAttribute("Usuarios", new ArrayList<>());
             model.addAttribute("Roles", new ArrayList<>());
             model.addAttribute("usuarioBusqueda", new Usuario());
             model.addAttribute("tokenValido", false);
         } catch (Exception ex) {
-            // Cualquier otro error (red, timeout, etc.)
             model.addAttribute("error", "Error de conexión");
             model.addAttribute("Usuarios", new ArrayList<>());
             model.addAttribute("Roles", new ArrayList<>());
