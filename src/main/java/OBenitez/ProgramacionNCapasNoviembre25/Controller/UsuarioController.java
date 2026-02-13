@@ -14,6 +14,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -27,6 +28,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -65,26 +68,40 @@ public class UsuarioController {
                 new ParameterizedTypeReference<Result<Rol>>() {}
             );
 
-            if (responseEntity.getStatusCode().is2xxSuccessful()) {
-                model.addAttribute("Usuarios", responseEntity.getBody().Objects);
-            } else {
-                model.addAttribute("Usuarios", new ArrayList<>());
-                if (responseEntity.getStatusCodeValue() == 401 || responseEntity.getStatusCodeValue() == 403) {
-                    session.invalidate();
-                    return "redirect:/login";
-                }
-            }
-
-            if (responseEntityRoles.getStatusCode().is2xxSuccessful()) {
-                model.addAttribute("Roles", responseEntityRoles.getBody().Objects);
-            } else {
-                model.addAttribute("Roles", new ArrayList<>());
-            }
-
+            model.addAttribute("Usuarios", responseEntity.getBody().Objects);
+            model.addAttribute("Roles", responseEntityRoles.getBody().Objects);
             model.addAttribute("usuarioBusqueda", new Usuario());
             model.addAttribute("tokenValido", true);
             model.addAttribute("jwtToken", token);
+
+        } catch (HttpClientErrorException ex) {
+            // Manejo específico de errores 4xx
+            if (ex.getStatusCode() == HttpStatus.UNAUTHORIZED) {
+                // Token expirado o inválido - redirigir al login
+                session.invalidate();
+                return "redirect:/login";
+            } else if (ex.getStatusCode() == HttpStatus.FORBIDDEN) {
+                // Sin permisos
+                session.invalidate();
+                return "redirect:/login";
+            } else {
+                // Otro error 4xx
+                model.addAttribute("error", "Error: " + ex.getMessage());
+                model.addAttribute("Usuarios", new ArrayList<>());
+                model.addAttribute("Roles", new ArrayList<>());
+                model.addAttribute("usuarioBusqueda", new Usuario());
+                model.addAttribute("tokenValido", false);
+            }
+        } catch (HttpServerErrorException ex) {
+            // Error 5xx del servidor
+            model.addAttribute("error", "Error del servidor");
+            model.addAttribute("Usuarios", new ArrayList<>());
+            model.addAttribute("Roles", new ArrayList<>());
+            model.addAttribute("usuarioBusqueda", new Usuario());
+            model.addAttribute("tokenValido", false);
         } catch (Exception ex) {
+            // Cualquier otro error (red, timeout, etc.)
+            model.addAttribute("error", "Error de conexión");
             model.addAttribute("Usuarios", new ArrayList<>());
             model.addAttribute("Roles", new ArrayList<>());
             model.addAttribute("usuarioBusqueda", new Usuario());
@@ -93,6 +110,7 @@ public class UsuarioController {
 
         return "Index";
     }
+
 
     
     @PostMapping("busqueda")
@@ -159,7 +177,7 @@ public class UsuarioController {
         if (token == null) {
             return "redirect:/login";
         }
-
+       
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(token);
@@ -557,6 +575,8 @@ public class UsuarioController {
             Result result = new Result();
             try {
                 Direccion dirreccion = usuario.Direcciones.get(0);
+                dirreccion.Usuario = new Usuario();
+                dirreccion.Usuario.setIdUsuario(usuario.getIdUsuario());
                 HttpEntity<Direccion> requestEntity = new HttpEntity<>(dirreccion, headers);
 
                 ResponseEntity<Result> responseEntityUpdateAddress = restTemplate.exchange(
